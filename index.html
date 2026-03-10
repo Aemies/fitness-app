@@ -6,522 +6,119 @@
 <title>Fitness Tracker</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-::-webkit-scrollbar { display: none; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-  background: #0a0a0a; color: #f0f0f0; min-height: 100vh;
-  max-width: 480px; margin: 0 auto; overflow-x: hidden;
-  padding-bottom: 80px;
-}
-@keyframes slideIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
-@keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.05); } }
-@keyframes spin { to { transform:rotate(360deg); } }
-
-.header {
-  position: sticky; top: 0; z-index: 50;
-  background: linear-gradient(to bottom, #0a0a0a 70%, transparent);
-  padding: 14px 16px 20px; display: flex; align-items: center; gap: 10px;
-}
-.header-title {
-  font-size: 18px; font-weight: 800;
-  background: linear-gradient(90deg, #3b82f6, #10b981);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-}
-.navbar {
-  position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto;
-  background: rgba(15,15,15,0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-  padding: 6px 0 14px; display: flex; justify-content: space-around;
-  border-top: 1px solid #1e1e1e; z-index: 100;
-}
-.nav-btn {
-  background: none; border: none; display: flex; flex-direction: column;
-  align-items: center; gap: 2px; cursor: pointer; padding: 4px 10px;
-  transition: all 0.2s; opacity: 0.4;
-}
-.nav-btn.active { opacity: 1; transform: scale(1.1); }
-.nav-btn span:first-child { font-size: 22px; }
-.nav-btn span:last-child { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; color: #888; }
-.nav-btn.active span:last-child { color: #60a5fa; }
-
-.screen { display: none; padding: 0 16px 16px; }
-.screen.active { display: block; }
-
-.card {
-  background: linear-gradient(135deg, #1a1a2e, #16213e);
-  border-radius: 16px; padding: 14px; margin-bottom: 10px;
-  border: 1px solid #2a2a3e; animation: slideIn 0.3s ease both;
-}
-.card-green {
-  background: linear-gradient(135deg, #064e3b, #065f46);
-  border-color: #10b981;
-}
-
-.tag {
-  font-size: 12px; color: #94a3b8; background: #1e293b;
-  padding: 3px 8px; border-radius: 8px; display: inline-block; margin: 2px;
-}
-.macro-tag { font-size: 11px; padding: 3px 8px; border-radius: 8px; font-weight: 600; display: inline-block; margin: 2px; }
-
-.progress-bar { height: 6px; background: #2a2a3e; border-radius: 3px; overflow: hidden; }
-.progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #10b981); border-radius: 3px; transition: width 0.5s; }
-
-.btn {
-  width: 100%; padding: 16px; border-radius: 16px; border: none;
-  color: #fff; font-size: 16px; font-weight: 700; cursor: pointer;
-  transition: all 0.3s;
-}
-.btn-primary { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.btn-danger { background: linear-gradient(135deg, #dc2626, #ea580c); }
-.btn-success { background: linear-gradient(135deg, #065f46, #064e3b); }
-.btn-ghost { background: transparent; border: 1px solid #2a2a3e; color: #9ca3af; font-size: 14px; }
-
-.slider-container { border-radius: 16px; padding: 20px; margin-bottom: 12px; border: 1px solid #2a2a3e; }
-input[type="range"] {
-  -webkit-appearance: none; width: 100%; height: 6px;
-  background: #2a2a3e; border-radius: 4px; outline: none;
-}
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%;
-  background: white; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-}
-
-.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.stat-box { background: #0f172a; border-radius: 12px; padding: 12px; text-align: center; }
-.stat-value { font-size: 16px; font-weight: 700; color: #f0f0f0; }
-.stat-label { font-size: 10px; color: #9ca3af; }
-
-.chart-container { display: flex; align-items: flex-end; gap: 4px; height: 60px; }
-.chart-bar { flex: 1; border-radius: 4px; transition: height 0.5s ease; }
-.chart-label { font-size: 8px; color: #666; text-align: center; margin-top: 4px; }
-
-.exercise-row { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-.exercise-num {
-  width: 28px; height: 28px; border-radius: 50%; display: flex;
-  align-items: center; justify-content: center; font-size: 14px; font-weight: 700;
-  color: #60a5fa; border: 2px solid #3b82f6; background: #2a2a3e;
-  transition: all 0.3s; flex-shrink: 0;
-}
-.exercise-num.done { background: #10b981; border: none; color: #fff; }
-
-.gauge { text-align: center; }
-.gauge-value { font-size: 32px; font-weight: 800; }
-.gauge-sub { font-size: 16px; color: #666; }
-
-.totals-bar {
-  background: linear-gradient(135deg, #1e3a5f, #1a1a2e);
-  border-radius: 16px; padding: 14px; margin-bottom: 16px;
-  border: 1px solid #2a4a7a; display: flex; justify-content: space-around;
-}
-.total-item { text-align: center; }
-.total-value { font-size: 18px; font-weight: 700; }
-.total-label { font-size: 10px; color: #999; }
-
-.loading-spinner {
-  width: 20px; height: 20px; border: 2px solid #ffffff40;
-  border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite;
-  display: inline-block; vertical-align: middle; margin-right: 8px;
-}
-
-h2 { font-size: 20px; margin-bottom: 4px; }
-.subtitle { color: #9ca3af; font-size: 13px; margin-bottom: 16px; }
-.section-title { font-size: 14px; font-weight: 600; margin-bottom: 10px; }
-.tip { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-start; }
-.tip-icon { color: #10b981; font-size: 14px; }
-.tip-text { font-size: 13px; color: #d1d5db; line-height: 1.5; }
-.note { font-size: 12px; color: #9ca3af; font-style: italic; margin-top: 6px; margin-left: 38px; }
-.supps { background: #1a1a2e; border-radius: 12px; padding: 12px; border: 1px solid #2a2a3e; text-align: center; font-size: 13px; color: #f59e0b; }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}::-webkit-scrollbar{display:none}body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;background:#0a0a0a;color:#f0f0f0;min-height:100vh;max-width:480px;margin:0 auto;overflow-x:hidden;padding-bottom:80px}
+@keyframes slideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}@keyframes spin{to{transform:rotate(360deg)}}
+.header{position:sticky;top:0;z-index:50;background:linear-gradient(to bottom,#0a0a0a 70%,transparent);padding:14px 16px 20px;display:flex;align-items:center;gap:10px}.header-title{font-size:18px;font-weight:800;background:linear-gradient(90deg,#3b82f6,#10b981);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.navbar{position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;background:rgba(15,15,15,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:6px 0 14px;display:flex;justify-content:space-around;border-top:1px solid #1e1e1e;z-index:100}.nav-btn{background:0;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:4px 10px;transition:all .2s;opacity:.4}.nav-btn.active{opacity:1;transform:scale(1.1)}.nav-btn span:first-child{font-size:22px}.nav-btn span:last-child{font-size:10px;font-weight:600;letter-spacing:.5px;color:#888}.nav-btn.active span:last-child{color:#60a5fa}
+.screen{display:none;padding:0 16px 16px}.screen.active{display:block}.card{background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:16px;padding:14px;margin-bottom:10px;border:1px solid #2a2a3e;animation:slideIn .3s ease both}.card-green{background:linear-gradient(135deg,#064e3b,#065f46);border-color:#10b981}.card-partial{background:linear-gradient(135deg,#1a1a2e,#1e3a5f);border-color:#3b82f6}
+.tag{font-size:12px;color:#94a3b8;background:#1e293b;padding:3px 8px;border-radius:8px;display:inline-block;margin:2px}.macro-tag{font-size:11px;padding:3px 8px;border-radius:8px;font-weight:600;display:inline-block;margin:2px}
+.progress-bar{height:6px;background:#2a2a3e;border-radius:3px;overflow:hidden}.progress-fill{height:100%;background:linear-gradient(90deg,#3b82f6,#10b981);border-radius:3px;transition:width .5s}
+.btn{width:100%;padding:16px;border-radius:16px;border:0;color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:all .3s}.btn-primary{background:linear-gradient(135deg,#3b82f6,#2563eb)}.btn-danger{background:linear-gradient(135deg,#dc2626,#ea580c)}.btn-success{background:linear-gradient(135deg,#065f46,#064e3b)}.btn-ghost{background:0;border:1px solid #2a2a3e;color:#9ca3af;font-size:14px}
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:200;animation:fadeIn .2s ease;justify-content:center;align-items:flex-end}.modal-overlay.active{display:flex}.modal{background:#141428;border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:480px;animation:slideUp .3s ease;max-height:85vh;overflow-y:auto}.modal-handle{width:40px;height:4px;background:#444;border-radius:2px;margin:0 auto 16px}.modal h3{font-size:18px;margin-bottom:4px}.modal-subtitle{font-size:13px;color:#9ca3af;margin-bottom:16px}
+.input-group{margin-bottom:14px}.input-label{font-size:12px;color:#9ca3af;margin-bottom:6px;font-weight:600}.input-row{display:flex;gap:10px}.input-field{flex:1;background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px;color:#f0f0f0;font-size:18px;font-weight:700;text-align:center;outline:0;-webkit-appearance:none}.input-field:focus{border-color:#3b82f6}.input-unit{font-size:12px;color:#666;text-align:center;margin-top:4px}
+.set-log{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1e293b}.set-num{font-size:13px;color:#60a5fa;font-weight:600}.set-detail{font-size:13px;color:#d1d5db}.set-badge{font-size:10px;background:#065f46;color:#10b981;padding:2px 8px;border-radius:8px}
+.slider-container{border-radius:16px;padding:20px;margin-bottom:12px;border:1px solid #2a2a3e}input[type=range]{-webkit-appearance:none;width:100%;height:6px;background:#2a2a3e;border-radius:4px;outline:0}input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.5)}input[type=number]{-moz-appearance:textfield}input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat-box{background:#0f172a;border-radius:12px;padding:12px;text-align:center}.stat-value{font-size:16px;font-weight:700;color:#f0f0f0}.stat-label{font-size:10px;color:#9ca3af}
+.exercise-num{width:28px;height:28px;border-radius:50%;display:flex;flex-shrink:0;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#60a5fa;border:2px solid #3b82f6;background:#2a2a3e;transition:all .3s}.exercise-num.partial{background:#1e3a5f;border-color:#60a5fa}.exercise-num.done{background:#10b981;border:0;color:#fff}
+.sets-indicator{display:flex;gap:3px;margin-left:38px;margin-top:6px}.set-dot{width:8px;height:8px;border-radius:50%;background:#2a2a3e;transition:all .3s}.set-dot.filled{background:#10b981}
+.totals-bar{background:linear-gradient(135deg,#1e3a5f,#1a1a2e);border-radius:16px;padding:14px;margin-bottom:16px;border:1px solid #2a4a7a;display:flex;justify-content:space-around}.total-item{text-align:center}.total-value{font-size:18px;font-weight:700}.total-label{font-size:10px;color:#999}
+.section-title{font-size:14px;font-weight:600;margin-bottom:10px}.note{font-size:12px;color:#9ca3af;font-style:italic;margin-top:6px;margin-left:38px}.supps{background:#1a1a2e;border-radius:12px;padding:12px;border:1px solid #2a2a3e;text-align:center;font-size:13px;color:#f59e0b}
+.gauge-value{font-size:32px;font-weight:800}.gauge-sub{font-size:16px;color:#666}.tip{display:flex;gap:8px;margin-bottom:8px}.tip-text{font-size:13px;color:#d1d5db;line-height:1.5}.loading-spinner{width:20px;height:20px;border:2px solid #ffffff40;border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
+h2{font-size:20px;margin-bottom:4px}.subtitle{color:#9ca3af;font-size:13px;margin-bottom:16px}
 </style>
 </head>
 <body>
-
-<div class="header">
-  <span style="font-size:24px">💪</span>
-  <span class="header-title">FITNESS TRACKER</span>
-</div>
-
-<!-- WORKOUT SCREEN -->
-<div id="screen-workout" class="screen active">
-  <div id="workout-content"></div>
-</div>
-
-<!-- MEAL SCREEN -->
-<div id="screen-meal" class="screen">
-  <div id="meal-content"></div>
-</div>
-
-<!-- PROGRESS SCREEN -->
-<div id="screen-progress" class="screen">
-  <div id="progress-content"></div>
-</div>
-
-<!-- CHECKIN SCREEN -->
+<div class="header"><span style="font-size:24px">💪</span><span class="header-title">FITNESS TRACKER</span></div>
+<div id="screen-workout" class="screen active"><div id="workout-content"></div></div>
+<div id="screen-meal" class="screen"><div id="meal-content"></div></div>
+<div id="screen-progress" class="screen"><div id="progress-content"></div></div>
 <div id="screen-checkin" class="screen">
-  <h2>📋 Ежедневный чекин</h2>
-  <p class="subtitle">Как ты себя чувствуешь сегодня?</p>
-  <div class="slider-container" id="sleep-container" style="background:linear-gradient(135deg,#1e3a5f,#1a1a2e)">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <span style="font-size:15px;font-weight:600">😴 Качество сна</span>
-      <span id="sleep-value" style="font-size:28px;font-weight:800;color:#818cf8">7</span>
-    </div>
-    <input type="range" id="sleep-slider" min="1" max="10" value="7" style="accent-color:#818cf8">
-    <div style="display:flex;justify-content:space-between;margin-top:6px">
-      <span style="font-size:10px;color:#666">😫 Ужасно</span>
-      <span style="font-size:10px;color:#666">😊 Отлично</span>
-    </div>
-  </div>
-  <div class="slider-container" id="mood-container" style="background:linear-gradient(135deg,#3b1a3e,#1a1a2e)">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <span style="font-size:15px;font-weight:600">🧠 Настроение</span>
-      <span id="mood-value" style="font-size:28px;font-weight:800;color:#f472b6">7</span>
-    </div>
-    <input type="range" id="mood-slider" min="1" max="10" value="7" style="accent-color:#f472b6">
-    <div style="display:flex;justify-content:space-between;margin-top:6px">
-      <span style="font-size:10px;color:#666">😔 Подавлен</span>
-      <span style="font-size:10px;color:#666">😊 Отлично</span>
-    </div>
-  </div>
-  <button class="btn btn-primary" id="checkin-btn" onclick="saveCheckin()">💾 Сохранить чекин</button>
+<h2>📋 Ежедневный чекин</h2><p class="subtitle">Как ты себя чувствуешь сегодня?</p>
+<div class="slider-container" id="sleep-container" style="background:linear-gradient(135deg,#1e3a5f,#1a1a2e)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span style="font-size:15px;font-weight:600">😴 Качество сна</span><span id="sleep-value" style="font-size:28px;font-weight:800;color:#818cf8">7</span></div><input type="range" id="sleep-slider" min="1" max="10" value="7"><div style="display:flex;justify-content:space-between;margin-top:6px"><span style="font-size:10px;color:#666">😫 Ужасно</span><span style="font-size:10px;color:#666">😊 Отлично</span></div></div>
+<div class="slider-container" id="mood-container" style="background:linear-gradient(135deg,#3b1a3e,#1a1a2e)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span style="font-size:15px;font-weight:600">🧠 Настроение</span><span id="mood-value" style="font-size:28px;font-weight:800;color:#f472b6">7</span></div><input type="range" id="mood-slider" min="1" max="10" value="7"><div style="display:flex;justify-content:space-between;margin-top:6px"><span style="font-size:10px;color:#666">😔 Подавлен</span><span style="font-size:10px;color:#666">😊 Отлично</span></div></div>
+<button class="btn btn-primary" id="checkin-btn" onclick="saveCheckin()">💾 Сохранить чекин</button>
 </div>
-
-<!-- BURNOUT SCREEN -->
-<div id="screen-burnout" class="screen">
-  <h2>🔥 AI Анализ выгорания</h2>
-  <p class="subtitle">GPT-4o анализирует тренировки, сон и настроение</p>
-  <div id="burnout-content">
-    <button class="btn btn-danger" onclick="runBurnoutAnalysis()">🧠 Запустить анализ</button>
-  </div>
-</div>
-
-<!-- NAVBAR -->
+<div id="screen-burnout" class="screen"><h2>🔥 AI Анализ выгорания</h2><p class="subtitle">Анализ тренировок, сна и настроения</p><div id="burnout-content"><button class="btn btn-danger" onclick="runBurnoutAnalysis()">🧠 Запустить анализ</button></div></div>
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)"><div class="modal" onclick="event.stopPropagation()"><div class="modal-handle"></div><h3 id="modal-title"></h3><div class="modal-subtitle" id="modal-subtitle"></div><div id="modal-sets-log" style="margin-bottom:16px"></div><div class="input-group"><div class="input-label">ПОДХОД</div><div class="input-row"><div style="flex:1"><input type="number" class="input-field" id="input-weight" placeholder="0" inputmode="decimal"><div class="input-unit">кг</div></div><div style="flex:1"><input type="number" class="input-field" id="input-reps" placeholder="0" inputmode="numeric"><div class="input-unit">повторений</div></div><div style="flex:.7"><input type="number" class="input-field" id="input-rpe" placeholder="-" inputmode="decimal" min="1" max="10" step="0.5"><div class="input-unit">RPE</div></div></div></div><button class="btn btn-primary" id="modal-save-btn" onclick="saveSet()" style="margin-bottom:10px">✅ Записать подход</button><button class="btn btn-ghost" onclick="closeModalForce()">Закрыть</button></div></div>
 <div class="navbar">
-  <button class="nav-btn active" onclick="switchScreen('workout')"><span>🏋️</span><span>Трен.</span></button>
-  <button class="nav-btn" onclick="switchScreen('meal')"><span>🍽</span><span>Еда</span></button>
-  <button class="nav-btn" onclick="switchScreen('progress')"><span>📊</span><span>Прогресс</span></button>
-  <button class="nav-btn" onclick="switchScreen('checkin')"><span>🧠</span><span>Чекин</span></button>
-  <button class="nav-btn" onclick="switchScreen('burnout')"><span>🔥</span><span>AI</span></button>
+<button class="nav-btn active" onclick="switchScreen('workout')"><span>🏋️</span><span>Трен.</span></button>
+<button class="nav-btn" onclick="switchScreen('meal')"><span>🍽</span><span>Еда</span></button>
+<button class="nav-btn" onclick="switchScreen('progress')"><span>📊</span><span>Прогресс</span></button>
+<button class="nav-btn" onclick="switchScreen('checkin')"><span>🧠</span><span>Чекин</span></button>
+<button class="nav-btn" onclick="switchScreen('burnout')"><span>🔥</span><span>AI</span></button>
 </div>
-
 <script>
-// ============ CONFIG ============
-const SUPABASE_URL = 'https://rdwbhpxlibhzhdezbirc.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_QkMFBaqOqSOAJyaovOcGgQ_3sSqfhap';
+const SB='https://rdwbhpxlibhzhdezbirc.supabase.co',SK='sb_publishable_QkMFBaqOqSOAJyaovOcGgQ_3sSqfhap';
+async function sf(t,p=''){try{const r=await fetch(`${SB}/rest/v1/${t}?${p}`,{headers:{'apikey':SK,'Authorization':`Bearer ${SK}`}});return await r.json()}catch(e){return[]}}
+async function si(t,d){try{const r=await fetch(`${SB}/rest/v1/${t}`,{method:'POST',headers:{'apikey':SK,'Authorization':`Bearer ${SK}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(d)});return r.ok}catch(e){return false}}
+function switchScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));document.getElementById('screen-'+id).classList.add('active');document.querySelectorAll('.nav-btn')[['workout','meal','progress','checkin','burnout'].indexOf(id)].classList.add('active');if(id==='workout')loadWorkout();if(id==='meal')loadMeal();if(id==='progress')loadProgress()}
+const schedule={1:{type:'upper_strength',title:'🏋️ ВЕРХ — Сила',name:'Понедельник',training:true},2:{type:'lower_strength',title:'🦵 НИЗ — Сила',name:'Вторник',training:true},3:{type:'rest_active',title:'🧘 Отдых',name:'Среда',training:false},4:{type:'upper_volume',title:'💪 ВЕРХ — Объём',name:'Четверг',training:true},5:{type:'lower_volume',title:'🦵 НИЗ — Объём',name:'Пятница',training:true},6:{type:'rest_active',title:'🚶 Восстановление',name:'Суббота',training:false},7:{type:'rest_full',title:'😴 Полный отдых',name:'Воскресенье',training:false}};
+function getDow(){const d=new Date().getDay();return d===0?7:d}
+function isTrainingDay(){return[1,2,4,5].includes(getDow())}
+function todayStr(){return new Date().toISOString().split('T')[0]}
+function parseSets(s){const m=s.match(/(\d+)/);return m?parseInt(m[1]):4}
+let currentExercise=null,todayLogs=[],allExercises=[];
 
-// ============ SUPABASE HELPER ============
-async function supaFetch(table, params = '') {
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-    });
-    return await res.json();
-  } catch(e) { console.error(e); return []; }
-}
-async function supaInsert(table, data) {
-  try {
-    await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json', 'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify(data)
-    });
-    return true;
-  } catch(e) { console.error(e); return false; }
-}
+async function loadWorkout(){
+const dow=getDow(),today=schedule[dow],c=document.getElementById('workout-content');
+if(!today.training){c.innerHTML=`<div style="text-align:center;padding-top:30px"><div style="font-size:64px;margin-bottom:16px">🧘</div><h2>${today.title}</h2><p class="subtitle">${today.name} — день восстановления</p><div class="card" style="text-align:left"><p style="color:#d1d5db;font-size:14px;line-height:1.8">🚶 20-30 мин ходьба<br>🧘 Растяжка 10-15 мин<br>🚿 Контрастный душ<br>🧴 Пенный ролик</p></div></div>`;return}
+const allEx=await sf('exercises','select=*');allExercises=allEx.filter(e=>e.workout_type===today.type).sort((a,b)=>a.exercise_order-b.exercise_order);
+const allL=await sf('workout_logs',`select=*&session_date=eq.${todayStr()}`);todayLogs=allL.filter(l=>l.exercise_name);
+const totalT=allExercises.reduce((s,e)=>s+parseSets(e.sets_reps),0),doneS=todayLogs.length,prog=totalT>0?(doneS/totalT*100):0;
+let h=`<h2>${today.title}</h2><p class="subtitle">${today.name} • ${allExercises.length} упражнений</p><div class="card" style="padding:12px"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;color:#9ca3af">Прогресс</span><span style="font-size:12px;color:#60a5fa;font-weight:700">${doneS}/${totalT} подходов</span></div><div class="progress-bar"><div class="progress-fill" style="width:${Math.min(prog,100)}%"></div></div></div>`;
+allExercises.forEach((ex,i)=>{const el=todayLogs.filter(l=>l.exercise_name===ex.name),ts=parseSets(ex.sets_reps),ds=el.length,done=ds>=ts,part=ds>0&&!done;
+const rm=Math.floor(ex.rest_seconds/60),rs=ex.rest_seconds%60,rest=rs>0?`${rm}:${String(rs).padStart(2,'0')}`:`${rm} мин`;
+h+=`<div class="card ${done?'card-green':part?'card-partial':''}" onclick="openModal(${ex.id})" style="cursor:pointer;animation-delay:${i*.05}s;${done?'opacity:.75':''}"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div class="exercise-num ${done?'done':part?'partial':''}">${done?'✓':ex.exercise_order}</div><div style="flex:1"><span style="font-size:15px;font-weight:600;${done?'text-decoration:line-through':''}">${ex.name}</span><span style="font-size:12px;color:${done?'#10b981':part?'#60a5fa':'#666'};margin-left:8px">${ds}/${ts}</span></div></div><div style="margin-left:38px"><span class="tag">📊 ${ex.sets_reps}</span><span class="tag">🏋️ ${ex.target_weight}</span><span class="tag">⏱ ${rest}</span><span class="tag">📐 ${ex.tempo||'-'}</span></div>${ex.notes?`<div class="note">💡 ${ex.notes}</div>`:''}<div class="sets-indicator">${Array.from({length:ts},(_,si)=>`<div class="set-dot ${si<ds?'filled':''}"></div>`).join('')}</div></div>`});
+c.innerHTML=h}
 
-// ============ NAVIGATION ============
-function switchScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('screen-' + id).classList.add('active');
-  document.querySelectorAll('.nav-btn')[['workout','meal','progress','checkin','burnout'].indexOf(id)].classList.add('active');
-  
-  if (id === 'workout') loadWorkout();
-  if (id === 'meal') loadMeal();
-  if (id === 'progress') loadProgress();
-}
+function openModal(id){const ex=allExercises.find(e=>e.id===id);if(!ex)return;currentExercise=ex;
+document.getElementById('modal-title').textContent=ex.name;document.getElementById('modal-subtitle').textContent=`${ex.sets_reps} • ${ex.target_weight} • Темп: ${ex.tempo||'-'}`;
+const el=todayLogs.filter(l=>l.exercise_name===ex.name);let lh='';
+if(el.length>0){lh='<div class="input-label" style="margin-bottom:8px">СЕГОДНЯ ЗАПИСАНО</div>';el.forEach((l,i)=>{lh+=`<div class="set-log"><span class="set-num">Подход ${i+1}</span><span class="set-detail">${l.weight_kg} кг × ${l.reps}${l.rpe?' RPE '+l.rpe:''}</span><span class="set-badge">✓</span></div>`})}
+document.getElementById('modal-sets-log').innerHTML=lh;
+const last=el.length>0?el[el.length-1]:null;document.getElementById('input-weight').value=last?last.weight_kg:'';document.getElementById('input-reps').value='';document.getElementById('input-rpe').value='';
+document.getElementById('modal-save-btn').textContent=`✅ Записать подход ${el.length+1}`;document.getElementById('modal-overlay').classList.add('active');setTimeout(()=>document.getElementById('input-weight').focus(),300)}
+function closeModal(e){if(e.target===document.getElementById('modal-overlay'))closeModalForce()}
+function closeModalForce(){document.getElementById('modal-overlay').classList.remove('active');currentExercise=null}
 
-// ============ DATA ============
-const schedule = {
-  1: { type:'upper_strength', title:'🏋️ ВЕРХ — Сила', name:'Понедельник', training:true },
-  2: { type:'lower_strength', title:'🦵 НИЗ — Сила', name:'Вторник', training:true },
-  3: { type:'rest_active', title:'🧘 Отдых', name:'Среда', training:false },
-  4: { type:'upper_volume', title:'💪 ВЕРХ — Объём', name:'Четверг', training:true },
-  5: { type:'lower_volume', title:'🦵 НИЗ — Объём', name:'Пятница', training:true },
-  6: { type:'rest_active', title:'🚶 Восстановление', name:'Суббота', training:false },
-  7: { type:'rest_full', title:'😴 Полный отдых', name:'Воскресенье', training:false },
-};
+async function saveSet(){if(!currentExercise)return;const w=parseFloat(document.getElementById('input-weight').value),r=parseInt(document.getElementById('input-reps').value),rpe=document.getElementById('input-rpe').value?parseFloat(document.getElementById('input-rpe').value):null;
+if(!w||w<=0||!r||r<=0){const b=document.getElementById('modal-save-btn');b.textContent='❌ Введи вес и повторения!';setTimeout(()=>{const el=todayLogs.filter(l=>l.exercise_name===currentExercise.name);b.textContent=`✅ Записать подход ${el.length+1}`},1500);return}
+const btn=document.getElementById('modal-save-btn');btn.textContent='⏳ Сохраняю...';btn.disabled=true;
+const el=todayLogs.filter(l=>l.exercise_name===currentExercise.name),sn=el.length+1;
+const data={exercise_name:currentExercise.name,exercise_id:currentExercise.id,set_number:sn,weight_kg:w,reps:r,rpe:rpe,session_date:todayStr()};
+const ok=await si('workout_logs',data);
+if(ok){todayLogs.push({...data,created_at:new Date().toISOString()});btn.textContent='✅ Записано!';btn.style.background='linear-gradient(135deg,#065f46,#064e3b)';setTimeout(()=>{closeModalForce();loadWorkout();btn.textContent='✅ Записать подход';btn.style.background='';btn.disabled=false},800)}
+else{btn.textContent='❌ Ошибка';btn.disabled=false}}
 
-function getDow() { const d = new Date().getDay(); return d === 0 ? 7 : d; }
-function isTrainingDay() { return [1,2,4,5].includes(getDow()); }
+async function loadMeal(){const tr=isTrainingDay(),dt=tr?'training':'rest',all=await sf('meal_plans','select=*'),meals=all.filter(m=>m.day_type===dt).sort((a,b)=>a.meal_order-b.meal_order);
+const t=meals.reduce((s,m)=>({p:s.p+(m.protein_g||0),c:s.c+(m.carbs_g||0),f:s.f+(m.fat_g||0),k:s.k+(m.calories||0)}),{p:0,c:0,f:0,k:0});
+let h=`<h2>🍽 План питания</h2><p class="subtitle">${tr?'Тренировочный день':'День отдыха'} • ~${t.k} ккал</p><div class="totals-bar"><div class="total-item"><div class="total-value" style="color:#ef4444">${t.p}г</div><div class="total-label">Белок</div></div><div class="total-item"><div class="total-value" style="color:#f59e0b">${t.c}г</div><div class="total-label">Углеводы</div></div><div class="total-item"><div class="total-value" style="color:#10b981">${t.f}г</div><div class="total-label">Жиры</div></div><div class="total-item"><div class="total-value" style="color:#60a5fa">${t.k}</div><div class="total-label">ккал</div></div></div>`;
+meals.forEach((m,i)=>{h+=`<div class="card" style="animation-delay:${i*.05}s"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-size:15px;font-weight:600">${m.meal_name}</span><span style="font-size:12px;color:#60a5fa;background:#1e3a5f;padding:2px 8px;border-radius:8px">${m.meal_time}</span></div><div style="font-size:13px;color:#d1d5db;margin-bottom:8px">${m.description}</div><div><span class="macro-tag" style="color:#ef4444;background:#ef444415">Б:${m.protein_g}г</span><span class="macro-tag" style="color:#f59e0b;background:#f59e0b15">У:${m.carbs_g}г</span><span class="macro-tag" style="color:#10b981;background:#10b98115">Ж:${m.fat_g}г</span><span class="macro-tag" style="color:#60a5fa;background:#60a5fa15">${m.calories}ккал</span></div></div>`});
+h+=`<div class="supps">💊 Омега-3 • D3 5000МЕ • Креатин 5г • Магний</div>`;document.getElementById('meal-content').innerHTML=h}
 
-const completedExercises = {};
+async function loadProgress(){const logs=await sf('workout_logs','select=*&order=created_at.asc'),wts=await sf('body_weight_log','select=*&order=logged_at.desc&limit=10');
+const wl=logs.filter(l=>l.exercise_name),days=new Set(wl.map(l=>l.session_date)),ts=wl.length,tv=wl.reduce((s,l)=>s+(parseFloat(l.weight_kg)||0)*(parseInt(l.reps)||0),0);
+const rpes=wl.filter(l=>l.rpe).map(l=>parseFloat(l.rpe)),ar=rpes.length>0?(rpes.reduce((a,b)=>a+b,0)/rpes.length).toFixed(1):'-',lw=wts.length>0?wts[0].weight_kg:'-';
+const mx={};wl.forEach(l=>{const w=parseFloat(l.weight_kg)||0;if(!mx[l.exercise_name]||w>mx[l.exercise_name])mx[l.exercise_name]=w});
+let h=`<h2>📊 Прогресс</h2><p class="subtitle">Статистика тренировок</p><div class="stat-grid" style="margin-bottom:16px"><div class="stat-box"><div style="font-size:20px;margin-bottom:4px">🏋️</div><div class="stat-value">${days.size}</div><div class="stat-label">Тренировок</div></div><div class="stat-box"><div style="font-size:20px;margin-bottom:4px">📦</div><div class="stat-value">${ts}</div><div class="stat-label">Подходов</div></div><div class="stat-box"><div style="font-size:20px;margin-bottom:4px">⚖️</div><div class="stat-value">${Math.round(tv).toLocaleString()}</div><div class="stat-label">Тоннаж</div></div><div class="stat-box"><div style="font-size:20px;margin-bottom:4px">💪</div><div class="stat-value">${ar}</div><div class="stat-label">RPE</div></div></div><div class="card"><div class="section-title">⚖️ Вес тела: ${lw} кг</div></div>`;
+if(Object.keys(mx).length>0){h+=`<div class="card"><div class="section-title">🏆 Макс. веса</div>`;Object.entries(mx).forEach(([n,w])=>{h+=`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e293b"><span style="font-size:13px;color:#d1d5db">${n}</span><span style="font-size:13px;font-weight:700;color:#60a5fa">${w} кг</span></div>`});h+=`</div>`}
+document.getElementById('progress-content').innerHTML=h}
 
-// ============ WORKOUT SCREEN ============
-async function loadWorkout() {
-  const dow = getDow();
-  const today = schedule[dow];
-  const container = document.getElementById('workout-content');
-  
-  if (!today.training) {
-    container.innerHTML = `
-      <div style="text-align:center;padding-top:30px">
-        <div style="font-size:64px;margin-bottom:16px">🧘</div>
-        <h2>${today.title}</h2>
-        <p class="subtitle">${today.name} — день восстановления</p>
-        <div class="card" style="text-align:left">
-          <p style="color:#d1d5db;font-size:14px;line-height:1.8">
-            🚶 20-30 мин ходьба<br>🧘 Растяжка 10-15 мин<br>🚿 Контрастный душ<br>🧴 Пенный ролик (МФР)
-          </p>
-        </div>
-      </div>`;
-    return;
-  }
+const ss=document.getElementById('sleep-slider'),ms=document.getElementById('mood-slider');
+function ub(v){return v>=8?'linear-gradient(135deg,#065f46,#1a1a2e)':v>=6?'linear-gradient(135deg,#78350f,#1a1a2e)':'linear-gradient(135deg,#7f1d1d,#1a1a2e)'}
+ss.addEventListener('input',e=>{document.getElementById('sleep-value').textContent=e.target.value;document.getElementById('sleep-container').style.background=ub(+e.target.value)});
+ms.addEventListener('input',e=>{document.getElementById('mood-value').textContent=e.target.value;document.getElementById('mood-container').style.background=ub(+e.target.value)});
+async function saveCheckin(){const b=document.getElementById('checkin-btn');b.textContent='⏳ Сохраняю...';b.disabled=true;const ok=await si('daily_checkin',{sleep_quality:+ss.value,mood:+ms.value});if(ok){b.className='btn btn-success';b.textContent='✅ Записано!';setTimeout(()=>{b.className='btn btn-primary';b.textContent='💾 Сохранить чекин';b.disabled=false},2000)}else{b.textContent='❌ Ошибка';b.disabled=false}}
 
-  const allExercises = await supaFetch('exercises', 'select=*');
-  const exercises = allExercises.filter(e => e.workout_type === today.type).sort((a,b) => a.exercise_order - b.exercise_order);
-  
-  const doneCount = Object.values(completedExercises).filter(Boolean).length;
-  const progress = exercises.length > 0 ? (doneCount / exercises.length * 100) : 0;
+async function runBurnoutAnalysis(){const c=document.getElementById('burnout-content');c.innerHTML=`<div class="card" style="text-align:center;padding:40px"><div class="loading-spinner"></div><span style="color:#9ca3af"> Анализирую данные...</span></div>`;
+const ci=await sf('daily_checkin','select=*&order=created_at.desc&limit=14'),logs=await sf('workout_logs','select=*'),wts=await sf('body_weight_log','select=*&order=logged_at.desc&limit=5');
+const wl=logs.filter(l=>l.exercise_name),days=new Set(wl.map(l=>l.session_date)),vol=wl.reduce((s,l)=>s+(parseFloat(l.weight_kg)||0)*(parseInt(l.reps)||0),0);
+const vc=ci.filter(c=>c.sleep_quality),as=vc.length>0?(vc.reduce((s,c)=>s+c.sleep_quality,0)/vc.length).toFixed(1):'-',am=vc.length>0?(vc.reduce((s,c)=>s+c.mood,0)/vc.length).toFixed(1):'-',bw=wts.length>0?wts[0].weight_kg:'-';
+let bu=2,ot=2;if(as!=='-'){if(as<5)bu+=3;else if(as<7)bu+=1}if(am!=='-'){if(am<5)bu+=3;else if(am<7)bu+=1}if(days.size<2)bu+=1;if(days.size>=4)ot+=2;bu=Math.min(bu,10);ot=Math.min(ot,10);
+const bc=bu<=3?'#10b981':bu<=6?'#f59e0b':'#ef4444',oc=ot<=3?'#10b981':ot<=6?'#f59e0b':'#ef4444';
+c.innerHTML=`<div class="stat-grid" style="margin-bottom:16px"><div class="card" style="text-align:center"><div style="font-size:24px;margin-bottom:4px">🔥</div><div class="gauge-value" style="color:${bc}">${bu}<span class="gauge-sub">/10</span></div><div class="stat-label">Выгорание</div></div><div class="card" style="text-align:center"><div style="font-size:24px;margin-bottom:4px">💪</div><div class="gauge-value" style="color:${oc}">${ot}<span class="gauge-sub">/10</span></div><div class="stat-label">Перетрен.</div></div></div><div class="card"><div class="section-title">📋 Данные за неделю</div><div style="font-size:13px;color:#d1d5db;line-height:1.8">🏋️ Тренировок: ${days.size}/4<br>⚖️ Тоннаж: ${Math.round(vol).toLocaleString()} кг<br>😴 Средний сон: ${as}/10<br>🧠 Настроение: ${am}/10<br>🏃 Вес тела: ${bw} кг</div></div><div class="card"><div class="section-title">💡 Рекомендации</div><div class="tip"><span style="color:#10b981">✦</span><span class="tip-text">${bu<=3?'Всё в порядке! Продолжай в том же темпе.':bu<=6?'Обрати внимание на сон и восстановление.':'Рекомендуется deload-неделя и больше отдыха.'}</span></div><div class="tip"><span style="color:#10b981">✦</span><span class="tip-text">${ot<=3?'Нагрузка в норме.':'Снизь интенсивность или добавь день отдыха.'}</span></div><div class="tip"><span style="color:#10b981">✦</span><span class="tip-text">Для детального AI-анализа отправь /burnout в Telegram</span></div></div><button class="btn btn-ghost" style="margin-top:12px" onclick="runBurnoutAnalysis()">🔄 Обновить</button>`}
 
-  let html = `
-    <h2>${today.title}</h2>
-    <p class="subtitle">${today.name} • ${exercises.length} упражнений</p>
-    <div class="card" style="padding:12px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-        <span style="font-size:12px;color:#9ca3af">Прогресс</span>
-        <span style="font-size:12px;color:#60a5fa;font-weight:700">${doneCount}/${exercises.length}</span>
-      </div>
-      <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
-    </div>`;
-
-  exercises.forEach((ex, i) => {
-    const done = completedExercises[ex.id];
-    const restMin = Math.floor(ex.rest_seconds / 60);
-    const restSec = ex.rest_seconds % 60;
-    const rest = restSec > 0 ? `${restMin}:${String(restSec).padStart(2,'0')}` : `${restMin} мин`;
-    
-    html += `
-    <div class="card ${done ? 'card-green' : ''}" onclick="toggleExercise(${ex.id})" style="cursor:pointer;opacity:${done?0.8:1};animation-delay:${i*0.05}s">
-      <div class="exercise-row" style="margin-bottom:8px">
-        <div class="exercise-num ${done?'done':''}">${done ? '✓' : ex.exercise_order}</div>
-        <span style="font-size:15px;font-weight:600;${done?'text-decoration:line-through':''};">${ex.name}</span>
-      </div>
-      <div style="margin-left:38px">
-        <span class="tag">📊 ${ex.sets_reps}</span>
-        <span class="tag">🏋️ ${ex.target_weight}</span>
-        <span class="tag">⏱ ${rest}</span>
-        <span class="tag">📐 ${ex.tempo || '-'}</span>
-      </div>
-      ${ex.notes ? `<div class="note">💡 ${ex.notes}</div>` : ''}
-    </div>`;
-  });
-
-  container.innerHTML = html;
-}
-
-function toggleExercise(id) {
-  completedExercises[id] = !completedExercises[id];
-  loadWorkout();
-}
-
-// ============ MEAL SCREEN ============
-async function loadMeal() {
-  const training = isTrainingDay();
-  const dayType = training ? 'training' : 'rest';
-  const allMeals = await supaFetch('meal_plans', 'select=*');
-  const meals = allMeals.filter(m => m.day_type === dayType).sort((a,b) => a.meal_order - b.meal_order);
-  
-  const totals = meals.reduce((s, m) => ({
-    p: s.p + (m.protein_g||0), c: s.c + (m.carbs_g||0),
-    f: s.f + (m.fat_g||0), k: s.k + (m.calories||0)
-  }), { p:0, c:0, f:0, k:0 });
-
-  let html = `
-    <h2>🍽 План питания</h2>
-    <p class="subtitle">${training ? 'Тренировочный день' : 'День отдыха'} • ~${totals.k} ккал</p>
-    <div class="totals-bar">
-      <div class="total-item"><div class="total-value" style="color:#ef4444">${totals.p}г</div><div class="total-label">Белок</div></div>
-      <div class="total-item"><div class="total-value" style="color:#f59e0b">${totals.c}г</div><div class="total-label">Углеводы</div></div>
-      <div class="total-item"><div class="total-value" style="color:#10b981">${totals.f}г</div><div class="total-label">Жиры</div></div>
-      <div class="total-item"><div class="total-value" style="color:#60a5fa">${totals.k}</div><div class="total-label">ккал</div></div>
-    </div>`;
-
-  meals.forEach((m, i) => {
-    html += `
-    <div class="card" style="animation-delay:${i*0.05}s">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="font-size:15px;font-weight:600">${m.meal_name}</span>
-        <span style="font-size:12px;color:#60a5fa;background:#1e3a5f;padding:2px 8px;border-radius:8px">${m.meal_time}</span>
-      </div>
-      <div style="font-size:13px;color:#d1d5db;margin-bottom:8px">${m.description}</div>
-      <div>
-        <span class="macro-tag" style="color:#ef4444;background:#ef444415">Б: ${m.protein_g}г</span>
-        <span class="macro-tag" style="color:#f59e0b;background:#f59e0b15">У: ${m.carbs_g}г</span>
-        <span class="macro-tag" style="color:#10b981;background:#10b98115">Ж: ${m.fat_g}г</span>
-        <span class="macro-tag" style="color:#60a5fa;background:#60a5fa15">ккал: ${m.calories}</span>
-      </div>
-    </div>`;
-  });
-
-  html += `<div class="supps">💊 Омега-3 • D3 5000МЕ • Креатин 5г • Магний</div>`;
-  document.getElementById('meal-content').innerHTML = html;
-}
-
-// ============ PROGRESS SCREEN ============
-async function loadProgress() {
-  const logs = await supaFetch('workout_logs', 'select=*&order=created_at.asc');
-  const weights = await supaFetch('body_weight_log', 'select=*&order=logged_at.desc&limit=10');
-  
-  const workoutLogs = logs.filter(l => l.exercise_name);
-  const days = new Set(workoutLogs.map(l => l.session_date));
-  const totalSets = workoutLogs.length;
-  const totalVolume = workoutLogs.reduce((s, l) => s + (parseFloat(l.weight_kg)||0) * (parseInt(l.reps)||0), 0);
-  const rpes = workoutLogs.filter(l => l.rpe).map(l => parseFloat(l.rpe));
-  const avgRpe = rpes.length > 0 ? (rpes.reduce((a,b)=>a+b,0)/rpes.length).toFixed(1) : '-';
-  const latestWeight = weights.length > 0 ? weights[0].weight_kg : '-';
-
-  const maxWeights = {};
-  workoutLogs.forEach(l => {
-    const w = parseFloat(l.weight_kg) || 0;
-    if (!maxWeights[l.exercise_name] || w > maxWeights[l.exercise_name]) maxWeights[l.exercise_name] = w;
-  });
-
-  let html = `
-    <h2>📊 Прогресс</h2>
-    <p class="subtitle">Статистика тренировок</p>
-    <div class="stat-grid" style="margin-bottom:16px">
-      <div class="stat-box"><div style="font-size:20px;margin-bottom:4px">🏋️</div><div class="stat-value">${days.size}/4</div><div class="stat-label">Тренировок</div></div>
-      <div class="stat-box"><div style="font-size:20px;margin-bottom:4px">📦</div><div class="stat-value">${totalSets}</div><div class="stat-label">Подходов</div></div>
-      <div class="stat-box"><div style="font-size:20px;margin-bottom:4px">⚖️</div><div class="stat-value">${Math.round(totalVolume).toLocaleString()}</div><div class="stat-label">Тоннаж (кг)</div></div>
-      <div class="stat-box"><div style="font-size:20px;margin-bottom:4px">💪</div><div class="stat-value">${avgRpe}</div><div class="stat-label">Средний RPE</div></div>
-    </div>
-    <div class="card">
-      <div class="section-title">⚖️ Вес тела: ${latestWeight} кг</div>
-    </div>`;
-
-  if (Object.keys(maxWeights).length > 0) {
-    html += `<div class="card"><div class="section-title">🏆 Макс. веса</div>`;
-    Object.entries(maxWeights).forEach(([name, w]) => {
-      html += `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e293b">
-        <span style="font-size:13px;color:#d1d5db">${name}</span>
-        <span style="font-size:13px;font-weight:700;color:#60a5fa">${w} кг</span>
-      </div>`;
-    });
-    html += `</div>`;
-  }
-
-  document.getElementById('progress-content').innerHTML = html;
-}
-
-// ============ CHECKIN ============
-const sleepSlider = document.getElementById('sleep-slider');
-const moodSlider = document.getElementById('mood-slider');
-const sleepValue = document.getElementById('sleep-value');
-const moodValue = document.getElementById('mood-value');
-const sleepContainer = document.getElementById('sleep-container');
-const moodContainer = document.getElementById('mood-container');
-
-function updateSliderBg(val) {
-  return val >= 8 ? 'linear-gradient(135deg,#065f46,#1a1a2e)' : val >= 6 ? 'linear-gradient(135deg,#78350f,#1a1a2e)' : 'linear-gradient(135deg,#7f1d1d,#1a1a2e)';
-}
-
-sleepSlider.addEventListener('input', e => {
-  sleepValue.textContent = e.target.value;
-  sleepContainer.style.background = updateSliderBg(parseInt(e.target.value));
-});
-moodSlider.addEventListener('input', e => {
-  moodValue.textContent = e.target.value;
-  moodContainer.style.background = updateSliderBg(parseInt(e.target.value));
-});
-
-async function saveCheckin() {
-  const btn = document.getElementById('checkin-btn');
-  const sleep = parseInt(sleepSlider.value);
-  const mood = parseInt(moodSlider.value);
-  
-  btn.textContent = '⏳ Сохраняю...';
-  btn.disabled = true;
-  
-  const ok = await supaInsert('daily_checkin', { sleep_quality: sleep, mood: mood });
-  
-  if (ok) {
-    btn.className = 'btn btn-success';
-    btn.textContent = '✅ Записано!';
-    setTimeout(() => {
-      btn.className = 'btn btn-primary';
-      btn.textContent = '💾 Сохранить чекин';
-      btn.disabled = false;
-    }, 2000);
-  } else {
-    btn.textContent = '❌ Ошибка, попробуй ещё раз';
-    btn.disabled = false;
-  }
-}
-
-// ============ BURNOUT AI ============
-async function runBurnoutAnalysis() {
-  const container = document.getElementById('burnout-content');
-  container.innerHTML = `
-    <div class="card" style="text-align:center;padding:40px">
-      <div class="loading-spinner"></div>
-      <span style="color:#9ca3af">Анализирую данные...</span>
-    </div>`;
-
-  const checkins = await supaFetch('daily_checkin', 'select=*&order=created_at.desc&limit=14');
-  const logs = await supaFetch('workout_logs', 'select=*');
-  const weights = await supaFetch('body_weight_log', 'select=*&order=logged_at.desc&limit=5');
-  
-  const workoutLogs = logs.filter(l => l.exercise_name);
-  const days = new Set(workoutLogs.map(l => l.session_date));
-  const totalSets = workoutLogs.length;
-  const totalVolume = workoutLogs.reduce((s,l) => s + (parseFloat(l.weight_kg)||0) * (parseInt(l.reps)||0), 0);
-
-  let data = 'Чекины:\n';
-  if (checkins.some(c => c.sleep_quality)) {
-    checkins.filter(c => c.sleep_quality).forEach(c => {
-      data += `Сон:${c.sleep_quality}/10 Настроение:${c.mood}/10\n`;
-    });
-  } else { data += 'Нет данных\n'; }
-  
-  data += `\nТренировки: ${days.size} из 4, подходов: ${totalSets}, тоннаж: ${Math.round(totalVolume)} кг\n`;
-  if (weights.length > 0) data += `\nВес тела: ${weights[0].weight_kg} кг\n`;
-
-  const prompt = `Ты спортивный психолог. Проанализируй данные атлета и оцени выгорание. Ответ на русском, 5-7 предложений.\n\n${data}\n\nКонтекст: мужчина 36 лет, 3 мес в зале, цель набор массы до 78-79 кг, Upper/Lower 4р/нед.\n\nФормат:\n🔥 Выгорание: X/10\n💪 Перетренированность: X/10\n📋 Анализ: ...\n💡 Рекомендации (2-3 действия): ...`;
-
-  try {
-    // Отправляем через n8n webhook или напрямую через OpenAI
-    // Для прототипа используем заглушку
-    container.innerHTML = `
-      <div class="stat-grid" style="margin-bottom:16px">
-        <div class="card gauge"><div style="font-size:24px;margin-bottom:4px">🔥</div><div class="gauge-value" style="color:#10b981">3<span class="gauge-sub">/10</span></div><div class="stat-label">Выгорание</div></div>
-        <div class="card gauge"><div style="font-size:24px;margin-bottom:4px">💪</div><div class="gauge-value" style="color:#f59e0b">4<span class="gauge-sub">/10</span></div><div class="stat-label">Перетрен.</div></div>
-      </div>
-      <div class="card">
-        <div class="section-title">📋 Анализ</div>
-        <p style="font-size:13px;color:#d1d5db;line-height:1.6">Данные собраны. Для полного AI-анализа подключи OpenAI API через n8n webhook. Пока бот работает через команду /burnout в Telegram.</p>
-      </div>
-      <div class="card">
-        <div class="section-title">💡 Используй бота</div>
-        <div class="tip"><span class="tip-icon">✦</span><span class="tip-text">Отправь /burnout в Telegram для полного AI-анализа</span></div>
-        <div class="tip"><span class="tip-icon">✦</span><span class="tip-text">Записывай /checkin каждое утро для точности</span></div>
-      </div>
-      <button class="btn btn-ghost" style="margin-top:12px" onclick="runBurnoutAnalysis()">🔄 Обновить</button>`;
-  } catch(e) {
-    container.innerHTML = `<div class="card" style="text-align:center"><p>❌ Ошибка. Используй /burnout в Telegram.</p></div>
-      <button class="btn btn-danger" style="margin-top:12px" onclick="runBurnoutAnalysis()">🔄 Попробовать снова</button>`;
-  }
-}
-
-// ============ INIT ============
-// Telegram WebApp init
-if (window.Telegram && window.Telegram.WebApp) {
-  const tg = window.Telegram.WebApp;
-  tg.ready();
-  tg.expand();
-}
-
+if(window.Telegram&&window.Telegram.WebApp){const tg=window.Telegram.WebApp;tg.ready();tg.expand()}
 loadWorkout();
 </script>
 </body>
